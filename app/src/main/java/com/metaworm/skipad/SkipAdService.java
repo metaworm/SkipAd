@@ -8,6 +8,7 @@ import android.os.Build;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
@@ -21,6 +22,8 @@ import java.util.List;
 public class SkipAdService extends AccessibilityService {
     public static SkipAdService instance = null;
     public static boolean log = true;
+    public static String filter = null;
+    public static EditText editLog = null;
     private static JSONArray config;
 
     public JSONArray getConfig() { return config; }
@@ -42,7 +45,7 @@ public class SkipAdService extends AccessibilityService {
         if (node == null) return null;
         CharSequence t = node.getText();
         if (t != null && t.toString().contains(text)) return node;
-        if (t != null) Log.d("EVENT", "GetText: " + t);
+//        if (t != null) Log.d("EVENT", "GetText: " + t);
 
         for (int i = 0; i < node.getChildCount(); i++) {
             AccessibilityNodeInfo n = findText(node.getChild(i), text);
@@ -64,8 +67,7 @@ public class SkipAdService extends AccessibilityService {
         switch (t) {
             case AccessibilityEvent.TYPE_WINDOWS_CHANGED:
                 Log.d("EVENT", "WINDOWS_CHANGED: " + e.getWindowChanges());
-                if (log)
-                    Log.d("EVENT", String.format("[%d] %s:%s", t, top.getPackageName(), source.getClassName()));
+//                if (log) Log.d("EVENT", String.format("[%d] %s:%s", t, top.getPackageName(), source.getClassName()));
 //                break;
             case AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED:
                 Log.d("EVENT", "WINDOW_STATE_CHANGED: " + e.getContentChangeTypes());
@@ -73,10 +75,22 @@ public class SkipAdService extends AccessibilityService {
             default:
                 // 遍历配置
                 try {
+                    String activity = top.getClassName().toString();
+                    String package_ = top.getPackageName().toString();
+
+                    if (filter != null) {
+                        AccessibilityNodeInfo node = findText(top, filter);
+                        if (node != null) {
+                            String info = node.getClassName() + "\n" + node.getPackageName() + "\n" + node.getText() + "\n";
+                            Toast.makeText(this, info, Toast.LENGTH_LONG).show();
+//                                if (editLog != null) editLog.append(info);
+                        }
+                    }
+
+                    if (package_.equals("com.metaworm.skipad")) break;
+
                     for (int i = 0; i < config.length(); i++) {
                         JSONObject c = config.getJSONObject(i);
-                        String activity = top.getClassName().toString();
-                        String package_ = top.getPackageName().toString();
                         String id = c.has("viewId") ? c.getString("viewId") : null;
                         String text = c.has("text") ? c.getString("text") : null;
 

@@ -10,14 +10,19 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
+import android.widget.CheckBox;
+import android.widget.EditText;
+import android.widget.Toast;
 
 import java.io.BufferedReader;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.Buffer;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
+    private EditText editLog;
+    private EditText editText;
+    private CheckBox checkFilter;
+
     public static boolean isServiceRunning(Context mContext, String className) {
         ActivityManager activityManager = (ActivityManager) mContext
                 .getSystemService(Context.ACTIVITY_SERVICE);
@@ -41,11 +46,26 @@ public class MainActivity extends AppCompatActivity {
             goAccess(null);
 
         AssetManager mgr = getAssets();
+        editLog = findViewById(R.id.editLog);
+        checkFilter = findViewById(R.id.checkFilter);
+        editText = findViewById(R.id.editText);
+
+        SkipAdService.editLog = editLog;
+
         try {
             BufferedReader b = new BufferedReader(new InputStreamReader(mgr.open("default.json")));
             SkipAdService.setConfig(b.readLine());
         } catch (Exception e) {
             Log.d("EXCEPTION", e.toString());
+        }
+    }
+
+    public void toggleFilter(View view) {
+        if (checkFilter.isChecked()) {
+            SkipAdService.filter = editText.getText().toString();
+            Toast.makeText(this, SkipAdService.filter, Toast.LENGTH_SHORT).show();
+        } else {
+            SkipAdService.filter = null;
         }
     }
 
